@@ -15,9 +15,9 @@
 ![画像2](/readme-img/Screen2.png)
 
 ## 動作環境
-* Windows 7 Professional
+* MacOS Big Sur 11.6 
 * Facebook SDK 4.12.1
-* Android Studio 1.5
+* Android Studio Arctic Fox 2020.3.1
 * Android ver 4x,5x
 * Android SDK v3
 
