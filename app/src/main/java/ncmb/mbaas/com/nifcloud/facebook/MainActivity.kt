@@ -5,13 +5,14 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
-import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
+import com.facebook.login.widget.LoginButton
 import com.nifcloud.mbaas.core.NCMB
 import com.nifcloud.mbaas.core.NCMBException
 import com.nifcloud.mbaas.core.NCMBFacebookParameters
@@ -30,35 +31,36 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         callbackManager = CallbackManager.Factory.create()
-        LoginManager.getInstance().registerCallback(callbackManager,
-                object : FacebookCallback<LoginResult> {
-                    override fun onSuccess(loginResult: LoginResult) {
 
-                        //Login to NIFCLOUD mobile backend
-                        val parameters = NCMBFacebookParameters(
-                                loginResult.accessToken.userId,
-                                loginResult.accessToken.token,
-                                loginResult.accessToken.expires
-                        )
-                        try {
-                            NCMBUser.loginWith(parameters)
-                            Toast.makeText(applicationContext, "Login to NIFCLOUD mbaas with Facebook account", Toast.LENGTH_LONG).show()
-                        } catch (e: NCMBException) {
-                            e.printStackTrace()
-                        }
+        val mLoginButton = findViewById<View>(R.id.login_button) as LoginButton
+        mLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(loginResult: LoginResult) {
 
-                    }
+                //Login to NIFCLOUD mobile backend
+                val parameters = NCMBFacebookParameters(
+                    loginResult.accessToken.userId,
+                    loginResult.accessToken.token,
+                    loginResult.accessToken.expires
+                )
+                try {
+                    NCMBUser.loginWith(parameters)
+                    Toast.makeText(applicationContext, "Login to NIFCLOUD mbaas with Facebook account", Toast.LENGTH_LONG).show()
+                } catch (e: NCMBException) {
+                    e.printStackTrace()
+                }
 
-                    override fun onCancel() {
-                        // App code
-                        Log.d("tag", "onCancel")
-                    }
+            }
 
-                    override fun onError(exception: FacebookException) {
-                        // App code
-                        Log.d("tag", "onError:$exception")
-                    }
-                })
+            override fun onCancel() {
+                // App code
+                Log.d("tag", "onCancel")
+            }
+
+            override fun onError(exception: FacebookException) {
+                // App code
+                Log.d("tag", "onError:$exception")
+            }
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -68,8 +70,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        callbackManager.onActivityResult(requestCode, resultCode, data)
         super.onActivityResult(requestCode, resultCode, data)
+        callbackManager.onActivityResult(requestCode, resultCode, data)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

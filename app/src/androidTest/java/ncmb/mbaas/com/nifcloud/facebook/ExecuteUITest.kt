@@ -1,5 +1,7 @@
 package ncmb.mbaas.com.nifcloud.facebook
 
+import android.os.Build
+import android.util.Log
 import android.view.View
 import android.webkit.WebView
 import android.widget.Button
@@ -17,10 +19,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.uiautomator.By
-import androidx.test.uiautomator.UiDevice
-import androidx.test.uiautomator.UiSelector
-import androidx.test.uiautomator.Until
+import androidx.test.platform.app.InstrumentationRegistry.getInstrumentation
+import androidx.test.uiautomator.*
 import org.hamcrest.Matcher
 import org.junit.Before
 import org.junit.Rule
@@ -54,6 +54,7 @@ class ExecuteUITest {
 
     @Test
     fun initialScreen() {
+        allowPermissionsIfNeeded()
         tvHead1!!.check(ViewAssertions.matches(ViewMatchers.withText("NIFCLOUD")))
         tvHead2!!.check(ViewAssertions.matches(ViewMatchers.withText("mobile backend")))
         btnLogin!!.check(ViewAssertions.matches(ViewMatchers.withText("Log in")))
@@ -63,6 +64,7 @@ class ExecuteUITest {
     @Test
     @Throws(Exception::class)
     fun doFacebookLogin() {
+        allowPermissionsIfNeeded()
         val FB_EMAIL = "YOUR_EMAIL@mail.com"
         val FB_PASS = "YOUR_PASS_WORD"
         val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -80,8 +82,10 @@ class ExecuteUITest {
                 .instance(0)
                 .className(EditText::class.java)
         )
-        emailInput.waitForExists(timeOut.toLong())
-        emailInput.text = FB_EMAIL
+        if (emailInput.exists()) {
+            emailInput.waitForExists(timeOut.toLong())
+            emailInput.text = FB_EMAIL
+        }
 
         // Set Password
         val passwordInput = mDevice.findObject(
@@ -89,30 +93,42 @@ class ExecuteUITest {
                 .instance(1)
                 .className(EditText::class.java)
         )
-        passwordInput.waitForExists(timeOut.toLong())
-        passwordInput.text = FB_PASS
+        if (passwordInput.exists()) {
+            passwordInput.waitForExists(timeOut.toLong())
+            passwordInput.text = FB_PASS
+        }
 
         // Confirm Button Click
+        var isNewWindow = false
+        if (emailInput.exists() && passwordInput.exists()) {
+            isNewWindow = true
+        }
         val buttonLogin = mDevice.findObject(
             UiSelector()
                 .instance(0)
                 .className(Button::class.java)
         )
-        buttonLogin.waitForExists(timeOut.toLong())
-        buttonLogin.clickAndWaitForNewWindow()
+        if (buttonLogin.exists()) {
+            buttonLogin.waitForExists(timeOut.toLong())
+            buttonLogin.clickAndWaitForNewWindow()
+            Thread.sleep(5000)
+        }
 
         // Facebook WebView - Page 2
-        val buttonOk = mDevice.findObject(
-            UiSelector()
-                .instance(0)
-                .className(Button::class.java)
-        )
-        buttonOk.waitForExists(timeOut.toLong())
-        buttonOk.click()
+        if (isNewWindow) {
+            val buttonOk = mDevice.findObject(
+                UiSelector()
+                    .instance(0)
+                    .className(Button::class.java)
+            )
+            buttonOk.waitForExists(timeOut.toLong())
+            buttonOk.click()
 
-        // should be properly synchronised with Espresso via IdlingResource,
-        // ConditionWatcher or any similar waiting solution
-        Thread.sleep(15000)
+            // should be properly synchronised with Espresso via IdlingResource,
+            // ConditionWatcher or any similar waiting solution
+            Thread.sleep(15000)
+        }
+
         btnLogin!!.check(ViewAssertions.matches(ViewMatchers.withText("Log out")))
     }
 
@@ -135,6 +151,20 @@ class ExecuteUITest {
             }
             matcher!!.perform(va)
             return text[0]
+        }
+    }
+
+    internal fun allowPermissionsIfNeeded() {
+        if (Build.VERSION.SDK_INT >= 31) {
+            val device = UiDevice.getInstance(getInstrumentation())
+            val allowPermissions = device.findObject(UiSelector().text("Allow"))
+            if (allowPermissions.exists()) {
+                try {
+                    allowPermissions.click()
+                } catch (e: UiObjectNotFoundException) {
+                    Log.d("NCMBTest", "Error: " + e.message)
+                }
+            }
         }
     }
 
