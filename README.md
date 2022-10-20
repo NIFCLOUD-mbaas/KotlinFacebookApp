@@ -15,11 +15,11 @@
 ![画像2](/readme-img/Screen2.png)
 
 ## 動作環境
-* Windows 7 Professional
-* Facebook SDK 4.12.1
-* Android Studio 1.5
-* Android ver 4x,5x
-* Android SDK v3
+* MacOS Monterey version 12.5
+* Facebook SDK 14.1.0
+* Android Studio Chipmunk | 2021.2.1 Patch 2
+* Pixel 2 - Android 13 (Simulator)
+* Android SDK v4.1.0
 
 ※上記内容で動作確認をしています。<br>
 ※古いバージョンだと動作しない可能性があります。
@@ -88,7 +88,7 @@
 
 ![画像13](/readme-img/Screen13.png)
 
-* `アプリID`の設定します。
+* `アプリID`や`クライアントトークン`の設定します。
   * `/app/src/main/res/values/strings.xml`を編集します。
 
 ![画像8](/readme-img/Screen8.png)
@@ -165,8 +165,8 @@
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
-import com.facebook.login.LoginManager
 import com.facebook.login.LoginResult
+import com.facebook.login.widget.LoginButton
 import com.nifcloud.mbaas.core.NCMB
 import com.nifcloud.mbaas.core.NCMBException
 import com.nifcloud.mbaas.core.NCMBFacebookParameters
@@ -180,34 +180,36 @@ import com.nifcloud.mbaas.core.NCMBUser
         setContentView(R.layout.activity_main)
 
         callbackManager = CallbackManager.Factory.create()
-        LoginManager.getInstance().registerCallback(callbackManager,
-                object : FacebookCallback<LoginResult> {
-                    override fun onSuccess(loginResult: LoginResult) {
 
-                        //Login to NIFCLOUD mobile backend
-                        val parameters = NCMBFacebookParameters(
-                                loginResult.accessToken.userId,
-                                loginResult.accessToken.token,
-                                loginResult.accessToken.expires
-                        )
-                        try {
-                            NCMBUser.loginWith(parameters)
-                            Toast.makeText(applicationContext, "Login to NIFCLOUD mbaas with Facebook account", Toast.LENGTH_LONG).show()
-                        } catch (e: NCMBException) {
-                            e.printStackTrace()
-                        }
-                    }
+        val mLoginButton = findViewById<View>(R.id.login_button) as LoginButton
+        mLoginButton.registerCallback(callbackManager, object : FacebookCallback<LoginResult> {
+            override fun onSuccess(loginResult: LoginResult) {
 
-                    override fun onCancel() {
-                        // App code
-                        Log.d("tag", "onCancel")
-                    }
+                //Login to NIFCLOUD mobile backend
+                val parameters = NCMBFacebookParameters(
+                    loginResult.accessToken.userId,
+                    loginResult.accessToken.token,
+                    loginResult.accessToken.expires
+                )
+                try {
+                    NCMBUser.loginWith(parameters)
+                    Toast.makeText(applicationContext, "Login to NIFCLOUD mbaas with Facebook account", Toast.LENGTH_LONG).show()
+                } catch (e: NCMBException) {
+                    e.printStackTrace()
+                }
 
-                    override fun onError(exception: FacebookException) {
-                        // App code
-                        Log.d("tag", "onError:$exception")
-                    }
-                })
+            }
+
+            override fun onCancel() {
+                // App code
+                Log.d("tag", "onCancel")
+            }
+
+            override fun onError(exception: FacebookException) {
+                // App code
+                Log.d("tag", "onError:$exception")
+            }
+        })
     }
 ```
 
@@ -217,9 +219,9 @@ import com.nifcloud.mbaas.core.NCMBUser
 ```kotlin
 
     // ログインボタン押下時の処理
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
-        callbackManager.onActivityResult(requestCode, resultCode, data)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        callbackManager.onActivityResult(requestCode, resultCode, data)
     }
 ```
 
